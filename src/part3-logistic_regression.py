@@ -22,4 +22,43 @@ from sklearn.linear_model import LogisticRegression as lr
 
 # Your code here
 
+# Read in "df_arrests"
+df_arrests = pd.read_csv("C:\\Users\\sfox1\\414 PS2\\problem-set-2\\src\\Data\\df_arrests.csv")
 
+# Split df_arrests into train and test dataframes
+df_arrests_train, df_arrests_test = train_test_split(df_arrests, test_size=0.3, shuffle=True, stratify=df_arrests['y'])
+
+# Create a list called features
+features = ['num_fel_arrests_last_year', 'current_charge_felony']
+
+# Create a parameter grid called param_grid
+param_grid = {'C': [0.1, 1.0, 10.0]}
+
+# Initialize the Logistic Regression model
+lr_model = lr(solver='liblinear')
+
+# Initialize the GridSearchCV
+gs_cv = GridSearchCV(estimator=lr_model, param_grid=param_grid, cv=5, scoring='accuracy')
+
+# Run the model on the training data
+X_train = df_arrests_train[features]
+y_train = df_arrests_train['y']
+gs_cv.fit(X_train, y_train)
+
+# Optimal value for C and regularization information
+optimal_C = gs_cv.best_params_['C']
+print(f"Optimal value for C: {optimal_C}")
+
+if optimal_C < 1:
+    print("C has the most regularization (high regularization).")
+elif optimal_C == 1:
+    print("C has medium regularization.")
+else:
+    print("C has the least regularization (low regularization).")
+
+# Predict for the test set
+X_test = df_arrests_test[features]
+df_arrests_test['pred_lr'] = gs_cv.predict(X_test)
+
+# Save the test dataframe to a CSV
+df_arrests_test.to_csv("C:\\Users\\sfox1\\414 PS2\\problem-set-2\\src\\Data\\df_arrests_test_with_predictions.csv", index=False)
